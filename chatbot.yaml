@@ -13,3 +13,41 @@ nlp:
   intentNoMatchThresholds:
     phrases: 0.2
     patterns: 0.2
+  lengthLimit:
+    enabled: true
+    symbols: 3000000
+  timeLimit:
+    enabled: true
+    timeout: 40000
+  nbest: 3
+  punctuations:
+    - "[!\\?]+"
+    - "\\.+"
+    - ","
+    - ",,"
+    - ";"
+    - ":"
+    - "»"
+    - "«"
+    - "\\+"
+    - "/+"
+    - "`+"
+    - "\\*+"
+    - "=+"
+    - "_+"
+    - "'+"
+    - "§+"
+    - "@+"
+    - "\\$"
+    - "#+"
+    - "%+"
+    - "\\{"
+    - "\\}"
+    - "\\["
+    - "\\]"
+regexCaseInsensitive: true
+
+
+messages:
+  onError:
+    defaultMessage: Ой, кажется, произошла ошибка. Попробуйте переформулировать вопрос.
