@@ -36,32 +36,40 @@ theme: /
             for (var el in $temp.reference) {
                 // расставляем приоритеты
                 var search = '';
-                var reference = '';
-                if ($temp.hypoCount.priorityHypo) {
+                var referent = '';
+                if ($temp.reference[el].priorityHypo > 0) {
                     search = 'isPriorityHypo';
-                } else if ($temp.hypoCount.normalHypo) {
+                } else if ($temp.reference[el].normalHypo > 0) {
                     search = 'isNormalHypo';
                 } else {
                     search = 'isSpareHypo';
                 }
+                log('search = ' + search)
                 
-                reference = $temp.reference.referent[el].filter(function(ref) {
+                referent = $temp.reference[el].referent.filter(function(ref) {
                     if (ref.priority == search) {
-                        return ', ' + $temp.reference.referent[el].referent;
+                        return ref.referent;
                     }
                 });
-                ans += '\nРеференциальное выражение -- ' + reference +
-                    '. Референт -- ' + $temp.reference[el].referent +
-                    ($temp.reference[el].isSpareHypo ? ', но я в этом не уверен.' : '.');
+                log('referent = '+ referent);
+                    
+                var referentText = '';
+                referent.forEach(function (word) {
+                    referentText = !referentText ? $nlp.inflect(word.referent, 'nomn') : referentText += ', ' + $nlp.inflect(word.referent, 'nomn');
+                });
+                ans += '\nРеференциальное выражение -- ' + $temp.reference[el].reference +
+                    '. Референт -- ' + referentText +
+                    (search === 'isSpareHypo' ? ', но я в этом не уверен.' : '.');
+                    
             }
-            
             var preamble = $temp.reference.length === 0
-                ? 'Я не нашел референции в ваших словах. Скажите еще что-нибудь'
+                ? 'Я не нашел референциальных выражений в ваших словах. Скажите еще что-нибудь'
                 : $temp.reference.length === 1
                 ? 'В вашем сообщении встретилась референция. '
                 : 'Я нашел сразу несколько случаев референции. ';
             ans = preamble + ans;
             $reactions.answer(ans);
+        
                
            
                         
