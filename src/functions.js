@@ -17,13 +17,13 @@ function makeTempContextInfo() {
     $temp.contextInfo['event'] = $request.query;
     $temp.contextInfo['refsList'] = [];
 
-    var markup = $caila.markup($request.query);
-    //var markup = {"source":"кот любит ее","correctedText":"кот любит ее","words":[{"annotations":{"lemma":"кот","pos":"S"},"startPos":0,"endPos":3,"pattern":false,"punctuation":false,"source":"кот","word":"кот"},{"annotations":{"lemma":"любить","pos":"V"},"startPos":4,"endPos":9,"pattern":false,"punctuation":false,"source":"любит","word":"любит"},{"annotations":{"lemma":"она","pos":"SPRO"},"startPos":10,"endPos":12,"pattern":false,"punctuation":false,"source":"ее","word":"ее"}]};
-    log(JSON.stringify(markup));
+    $temp.markup = $caila.markup($request.query);
+    //$temp.markup = {"source":"кот любит ее","correctedText":"кот любит ее","words":[{"annotations":{"lemma":"кот","pos":"S"},"startPos":0,"endPos":3,"pattern":false,"punctuation":false,"source":"кот","word":"кот"},{"annotations":{"lemma":"любить","pos":"V"},"startPos":4,"endPos":9,"pattern":false,"punctuation":false,"source":"любит","word":"любит"},{"annotations":{"lemma":"она","pos":"SPRO"},"startPos":10,"endPos":12,"pattern":false,"punctuation":false,"source":"ее","word":"ее"}]};
+    log(JSON.stringify($temp.markup));
     log(JSON.stringify($parseTree));
 
     var count = 0;
-    markup.words.forEach(function(word) {
+    $temp.markup.words.forEach(function(word) {
         if (word.annotations.pos === 'S') {
             count++;
             var ref;
@@ -91,11 +91,11 @@ function searchForReference() {
     
     $temp.reference = $temp.reference || [];
 
-    var markup = $caila.markup($request.query);
-    //var markup = {"source":"кот любит ее","correctedText":"кот любит ее","words":[{"annotations":{"lemma":"кот","pos":"S"},"startPos":0,"endPos":3,"pattern":false,"punctuation":false,"source":"кот","word":"кот"},{"annotations":{"lemma":"любить","pos":"V"},"startPos":4,"endPos":9,"pattern":false,"punctuation":false,"source":"любит","word":"любит"},{"annotations":{"lemma":"она","pos":"SPRO"},"startPos":10,"endPos":12,"pattern":false,"punctuation":false,"source":"ее","word":"ее"}]};
-    log(JSON.stringify(markup));
+    $temp.markup = $temp.markup || $caila.markup($request.query);
+    //$temp.markup = {"source":"кот любит ее","correctedText":"кот любит ее","words":[{"annotations":{"lemma":"кот","pos":"S"},"startPos":0,"endPos":3,"pattern":false,"punctuation":false,"source":"кот","word":"кот"},{"annotations":{"lemma":"любить","pos":"V"},"startPos":4,"endPos":9,"pattern":false,"punctuation":false,"source":"любит","word":"любит"},{"annotations":{"lemma":"она","pos":"SPRO"},"startPos":10,"endPos":12,"pattern":false,"punctuation":false,"source":"ее","word":"ее"}]};
+    log(JSON.stringify($temp.markup));
 
-    markup.words.forEach(function(word) {
+    $temp.markup.words.forEach(function(word) {
         if (word.annotations.pos === 'SPRO') {
             var analysis = $nlp.parseMorph(word.word);
             log(JSON.stringify(analysis));
@@ -115,7 +115,7 @@ function searchForReference() {
             }
             gender = gender || '';
             number = number || '';
-            casename = analysis.tags[el];
+            casename = analysis.tags[el] || '';
             
             var reversedContext = $client.contextInfo.slice(-5).reverse();
             log(JSON.stringify(reversedContext));
@@ -126,17 +126,17 @@ function searchForReference() {
                 var NormalHypo = 0;
                 var referents = [];
                 for (var candidate in reversedContext[el]) {
-                    if (reversedContext[el][candidate] != reversedContext[el]['event'] && reversedContext[el][candidate] != reversedContext[el]['refsList']) {
+                    if (reversedContext[el][candidate] != reversedContext[el]['event'] && reversedContext[el][candidate] != reversedContext[el]['refsList'] && Object.keys(reversedContext[el]['refsList']) != 0) {
                         var isSpareHypo;
                         var isPriorityHypo;
                         var isNormalHypo;
                         if (reversedContext[el][candidate]['gender'] === gender && reversedContext[el][candidate]['number'] === number) {
                             hypothesis = reversedContext[el][candidate]['word'];
-                            if ((reversedContext[el][candidate]['isNomn'] && reversedContext[el].length - 2 > 1) || reversedContext[el].length - 2 == 1) {
-                                isPriorityHypo++;
+                            if (reversedContext[el][candidate]['isNomn']) {
+                                PriorityHypo++;
                                 isPriorityHypo = true;
                             } else {
-                                NormalHypo = NormalHypo + 1;
+                                NormalHypo++;
                                 isNormalHypo = true;
                             }
                         } else if (reversedContext[el][candidate]['gender'] === gender || reversedContext[el][candidate]['number'] === number) {
@@ -147,10 +147,13 @@ function searchForReference() {
                         if (hypothesis) {
                             referents.push({ referent: hypothesis, priority: isPriorityHypo ? 'isPriorityHypo' : isNormalHypo ? 'isNormalHypo' : 'isSpareHypo' });
                         }
-                        if (hypothesis && (isNormalHypo || isPriorityHypo)) {
-                            $temp.reference.push({ reference: word.word, normalHypo: NormalHypo, priorityHypo: PriorityHypo, spareHypo: SpareHypo, referent: referents });
-                        }
+                        isSpareHypo = false;
+                        isPriorityHypo = false;
+                        isNormalHypo = false;
                     }
+                }
+                if (hypothesis) {
+                    $temp.reference.push({ reference: word.word, normalHypo: NormalHypo, priorityHypo: PriorityHypo, spareHypo: SpareHypo, referent: referents });
                 }
             }
         }

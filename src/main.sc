@@ -70,12 +70,10 @@ theme: /
             ans = preamble + ans;
             $reactions.answer(ans);
         
-               
-           
+        
                         
     state: ClearClient
         q!: * (удали*/удаля*/удаление) *
         script:
             delete $client.contextInfo;
         a: Ой! Я все забыл.
-            
