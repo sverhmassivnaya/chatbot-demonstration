@@ -62,7 +62,7 @@ function makeTempContextInfo() {
             casename = casename || '';
             
             $temp.contextInfo.refsList.push(word.word);     
-            $temp.contextInfo[ref] = { word: word.word, gender: gender, number: number, casename: casename, isNomn: isNomn };
+            $temp.contextInfo[ref] = { word: word.word, lemma: word.annotations.lemma, gender: gender, number: number, casename: casename, isNomn: isNomn };
         }
     });
     log(toPrettyString($temp.contextInfo));
@@ -70,7 +70,6 @@ function makeTempContextInfo() {
     $client.contextInfo.push($temp.contextInfo);
     log(toPrettyString($client.contextInfo));
 }
-
 
 
 
@@ -96,8 +95,9 @@ function searchForReference() {
     log(JSON.stringify($temp.markup));
 
     $temp.markup.words.forEach(function(word) {
-        if (word.annotations.pos === 'SPRO') {
+        if (word.annotations.pos === 'SPRO' || word.annotations.pos === 'NPRO') {
             var analysis = $nlp.parseMorph(word.word);
+            //var lemma = word.annotations.lemma;
             log(JSON.stringify(analysis));
             var gender;
             var number;
@@ -118,9 +118,10 @@ function searchForReference() {
             casename = analysis.tags[el] || '';
             
             var reversedContext = $client.contextInfo.slice(-5).reverse();
-            log(JSON.stringify(reversedContext));
+            log('reversedContext = ' + JSON.stringify(reversedContext));
             for (var el in reversedContext) {
                 var hypothesis;
+                //var lemma;
                 var SpareHypo = 0;
                 var PriorityHypo = 0;
                 var NormalHypo = 0;
@@ -154,9 +155,10 @@ function searchForReference() {
                 }
                 if (hypothesis) {
                     $temp.reference.push({ reference: word.word, normalHypo: NormalHypo, priorityHypo: PriorityHypo, spareHypo: SpareHypo, referent: referents });
+                    hypothesis = undefined;
                 }
             }
         }
     });
-    log(toPrettyString($temp.reference));
+    log('$temp.reference = ' + toPrettyString($temp.reference));
 }
